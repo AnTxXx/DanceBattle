@@ -4,7 +4,7 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Samples.Kinect.SkeletonBasics
+namespace Microsoft.Samples.Kinect.DanceBattle
 {
     using System.IO;
     using System.Windows;
@@ -61,7 +61,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         MediaPlayer m = new MediaPlayer();
 
         private static System.Timers.Timer aTimer;
-        private static System.Timers.Timer displayLimitedTimer;
         
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -87,7 +86,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             this.out_p1visible.Source = loadPix("pl_1");
             this.out_p2visible.Source = loadPix("pl_2");
             m.Open(new System.Uri(System.Environment.CurrentDirectory + @"\..\..\music\dance_battle.wav"));
-           
             m.MediaEnded += new EventHandler(Media_Ended);
             m.Play();
             //sound = new System.Media.SoundPlayer(@"..\..\music\dance_battle.wav");
@@ -152,10 +150,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 }
             }
 
-            if (null == this.sensor)
-            {
-                this.statusBarText.Text = Properties.Resources.NoKinectReady;
-            }
         }
 
         /// <summary>
