@@ -52,6 +52,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         private int pointsP2 = 6;
         private string actualGesture = "";
         private bool timerStarted = false;
+        private bool gameRunning = false;
         private int round = 0;
 
         Skeleton player1 = null;
@@ -79,7 +80,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         private void WindowLoaded(object sender, RoutedEventArgs e)
         {
             this.out_main.Source = loadPix("title");
-            m.SpeedRatio = 1.0;
+            m.SpeedRatio = 1.2;
             this.out_frame.Source = loadPix("stage");
             this.out_health1.Source = loadPix("pl1_h_6");
             this.out_health2.Source = loadPix("pl2_h_6");
@@ -244,9 +245,10 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                                 {
                                     aTimer = new System.Timers.Timer(60000);
                                     aTimer.Elapsed += new System.Timers.ElapsedEventHandler(OnTimedEvent);
-                                    aTimer.Interval = 3000;
+                                    aTimer.Interval = 2000;
                                     aTimer.Enabled = true;
                                     timerStarted = true;
+                                    gameRunning = true;
                                     this.out_main.Source = loadPix("countdown_dance");
                                 }
                             }
@@ -266,61 +268,104 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
                 if(player1!=null & player2!=null) Debug.WriteLine(player1.Position.X + " - " + player1.Position.Y);
                     if (timerStarted && !gestureDoneP1 && actualGesture == this.identifyGesture(player1))
-                    {
-                        Debug.WriteLine("Player1 hats getan");
+                    {  
                         gestureDoneP1 = true;
                     }
                 
                     if (timerStarted && !gestureDoneP2 && actualGesture == this.identifyGesture(player2))
                     {
-                        Debug.WriteLine("Player2 hats auch getan");
                         gestureDoneP2 = true;
                     }
             }
         }
 
-        private void OnTimedEvent(object source, ElapsedEventArgs e)
-        {
-            this.actualGesture = randomGesture();
-            if (round == 0)
-            {
-                gestureDoneP1 = true;
-                gestureDoneP2 = true;
-            }
-            else if (round % 5 == 0)
-            {
-                Dispatcher.BeginInvoke(new Action(() => m.SpeedRatio = m.SpeedRatio + 0.05));
-                Dispatcher.BeginInvoke(new Action(() => aTimer.Interval = aTimer.Interval - 200));
-                Dispatcher.BeginInvoke(new Action(() => this.out_bloody.Source = loadPix("speed_up")));
-            }
-            else if (round % 5 == 1)
-            {
-                Dispatcher.BeginInvoke(new Action(() => this.out_bloody.Source = null));
-            }
-            if (!gestureDoneP1)
-            {
-                pointsP1--;
-                
-                Dispatcher.BeginInvoke(new Action(() => this.out_health1.Source = loadPix("pl1_h_" + pointsP1)));
-                if (pointsP1 == 0)
-                {
-                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("win_pl2")));
-                }
-            }
-            if (!gestureDoneP2)
-            {
-                pointsP2--;
-                
-                Dispatcher.BeginInvoke(new Action(() => this.out_health2.Source = loadPix("pl2_h_" + pointsP2)));
-                if (pointsP2 == 0)
-                {
-                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("win_pl1")));
-                }
-            }
-            this.gestureDoneP1 = false;
-            this.gestureDoneP2 = false;
-            this.round++;
+        private void OnTimedEvent(object source, ElapsedEventArgs e){
 
+            if (gameRunning)
+            {
+
+                this.actualGesture = randomGesture();
+
+
+                if (round == 0)
+                {
+                    gestureDoneP1 = true;
+                    gestureDoneP2 = true;
+                }
+                else if (round % 5 == 0)
+                {
+                    Dispatcher.BeginInvoke(new Action(() => m.SpeedRatio = m.SpeedRatio + 0.07));
+                    //Intervall darf nicht 0 werden
+                    Dispatcher.BeginInvoke(new Action(() => aTimer.Interval = (Math.Abs(aTimer.Interval - 200)) + 1));
+                    Dispatcher.BeginInvoke(new Action(() => this.out_bloody.Source = loadPix("speed_up")));
+                }
+                else if (round % 5 == 1)
+                {
+                    Dispatcher.BeginInvoke(new Action(() => this.out_bloody.Source = null));
+                }
+
+
+                if (!gestureDoneP1)
+                {
+                    pointsP1--;
+                    if (pointsP1 >= 0)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() => this.out_health1.Source = loadPix("pl1_h_" + pointsP1)));
+                    }
+
+
+                }
+                if (!gestureDoneP2)
+                {
+                    pointsP2--;
+                    if (pointsP2 >= 0)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() => this.out_health2.Source = loadPix("pl2_h_" + pointsP2)));
+                    }
+
+                }
+
+
+                if (pointsP1 == 0 && pointsP2 == 0)
+                {
+                    //unentschieden
+
+                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("win_nobody")));
+                    gameRunning = false;
+                }
+                else if (pointsP1 == 0)
+                {
+                    //spieler 1 verloren
+                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("win_pl2")));
+                    gameRunning = false;
+
+                }
+                else if (pointsP2 == 0)
+                {
+                    //spieler 2 verloren
+                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("win_pl1")));
+                    gameRunning = false;
+                }
+
+                this.gestureDoneP1 = false;
+                this.gestureDoneP2 = false;
+                this.round++;
+            }
+            else{ //game not running
+
+                if (this.identifyGesture(player1) == "NEW" && this.identifyGesture(player2) == "NEW")
+                {
+                    Dispatcher.BeginInvoke(new Action(() => this.out_main.Source = loadPix("countdown_dance")));
+                    Dispatcher.BeginInvoke(new Action(() => this.out_health1.Source = loadPix("pl1_h_6")));
+                    Dispatcher.BeginInvoke(new Action(() => this.out_health2.Source = loadPix("pl2_h_6")));
+                    Dispatcher.BeginInvoke(new Action(() => aTimer.Interval = 2000));
+                    pointsP2 = 6;
+                    pointsP1 = 6;
+                    Dispatcher.BeginInvoke(new Action(() => m.SpeedRatio = 1.2));
+                    round = 0;
+                    gameRunning = true;
+                }
+            }
         }
 
 
@@ -346,6 +391,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
         }
 
+
+
+
         private string identifyGesture(Skeleton inpSkeleton)
         {
             if (inpSkeleton.Joints[JointType.HandLeft].Position.Y > inpSkeleton.Joints[JointType.Head].Position.Y
@@ -353,8 +401,8 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             {
                 return "UP";
             }
-            else if(inpSkeleton.Joints[JointType.WristLeft].Position.Y < ((inpSkeleton.Joints[JointType.KneeLeft].Position.Y)+inpSkeleton.Joints[JointType.HipLeft].Position.Y)/2
-               && inpSkeleton.Joints[JointType.WristRight].Position.Y < ((inpSkeleton.Joints[JointType.KneeRight].Position.Y) + inpSkeleton.Joints[JointType.HipRight].Position.Y)/2)
+            else if(inpSkeleton.Joints[JointType.WristLeft].Position.Y < (inpSkeleton.Joints[JointType.HipLeft].Position.Y)
+               && inpSkeleton.Joints[JointType.WristRight].Position.Y < (inpSkeleton.Joints[JointType.HipRight].Position.Y))
             {
 
                 return "DOWN";
@@ -369,14 +417,29 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             {
                 return "RIGHT";
             }
+            else if ((inpSkeleton.Joints[JointType.HandRight].Position.Y > inpSkeleton.Joints[JointType.Head].Position.Y &&
+                     inpSkeleton.Joints[JointType.HandLeft].Position.Y > inpSkeleton.Joints[JointType.KneeLeft].Position.Y &&
+                     inpSkeleton.Joints[JointType.HandLeft].Position.Y < inpSkeleton.Joints[JointType.ShoulderLeft].Position.Y) ||
+                     (inpSkeleton.Joints[JointType.HandLeft].Position.Y > inpSkeleton.Joints[JointType.Head].Position.Y &&
+                     inpSkeleton.Joints[JointType.HandRight].Position.Y > inpSkeleton.Joints[JointType.KneeRight].Position.Y &&
+                     inpSkeleton.Joints[JointType.HandRight].Position.Y < inpSkeleton.Joints[JointType.ShoulderRight].Position.Y)
+                    )
+            {
+                return "NEW";
+            }
             else
             {
                 return "NONE";
             }
         }
+        
+
+        
 
         private BitmapImage loadPix(string inpName){
-            return new BitmapImage(new System.Uri(System.Environment.CurrentDirectory+@"\..\..\Images\"+inpName+".png"));
+                
+                return new BitmapImage(new System.Uri(System.Environment.CurrentDirectory+@"\..\..\Images\"+inpName+".png"));
+           
         }
     }
 }
