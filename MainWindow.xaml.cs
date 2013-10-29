@@ -215,7 +215,6 @@ namespace Microsoft.Samples.Kinect.DanceBattle
                 }
             }
 
-            //Unser Code
             if (skeletons.Length != 0)
             {
                 if (!timerStarted)
@@ -260,7 +259,6 @@ namespace Microsoft.Samples.Kinect.DanceBattle
                 if (player1 == null) this.out_p1visible.Visibility = System.Windows.Visibility.Hidden;
                 if (player2 == null) this.out_p2visible.Visibility = System.Windows.Visibility.Hidden;
 
-                if(player1!=null & player2!=null) Debug.WriteLine(player1.Position.X + " - " + player1.Position.Y);
                     if (timerStarted && !gestureDoneP1 && actualGesture == this.identifyGesture(player1))
                     {  
                         gestureDoneP1 = true;
